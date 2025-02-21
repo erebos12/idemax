@@ -1,19 +1,23 @@
 package tenants
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
-	"time"
+
+	"idemax/utils"
 )
 
+var ctx = context.Background()
 
-func CreateNewTenant(tenant TenantData) (TenantData, error) {
-	tenant.CreatedAt = time.Now().Unix()
+func SaveTenant(tenant TenantData) error { 
+	redisClient := utils.GetRedisClient()
 
-	// Store tenant in Redis
-	err := SaveTenant(tenant)
+	serializedData, _ := json.Marshal(tenant)
+	err := redisClient.Set(ctx, "tenant:"+tenant.TenantID, serializedData, 0).Err()
 	if err != nil {
-		return TenantData{}, errors.New("failed to create tenant")
+		return errors.New("failed to store tenant")
 	}
 
-	return tenant, nil
+	return nil
 }
