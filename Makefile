@@ -10,3 +10,8 @@ start: ## rbuild and runs idemax with Redis
 
 stop: ## rbuild and runs idemax with Redis
 		docker-compose stop
+
+it: stop ## docker compose - execute all BDD tests (including API tests)
+	docker-compose -f docker-compose.yml -f docker-compose-only-tests.yml build || exit 1
+	docker-compose -f docker-compose.yml -f docker-compose-only-tests.yml run bdd-test || exit 1
+	docker-compose -f docker-compose.yml -f docker-compose-only-tests.yml down

@@ -1,0 +1,13 @@
+behave
+behavex
+requests
+pyhamcrest
+pyyaml
+fastapi
+uvicorn
+python-multipart
+pymongo
+pydantic
+typing
+python-dotenv
+playwright

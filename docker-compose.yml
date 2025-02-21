@@ -22,6 +22,15 @@ services:
     environment:
       - REDIS_HOST=redis:6379
 
+  bdd-test:
+    container_name: bdd_test
+    build:
+      context: ./bdd-test/
+      dockerfile: Dockerfile
+    depends_on:
+      - idemax
+      - redis
+
 volumes:
   redis_data:
     driver: local

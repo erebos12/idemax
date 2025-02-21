@@ -1,0 +1,11 @@
+services:
+  bdd-test:
+    build:
+      context: ./bdd-test
+      dockerfile: Dockerfile  
+    volumes:
+      - ./reports:/tests/output
+    depends_on:
+      - redis
+      - idemax
+    command: /bin/sh -c "exec /tests/execute_tests.sh"

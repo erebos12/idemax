@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"strconv"
 	"encoding/json"
 	"log"
-	"os"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -17,9 +17,9 @@ var ctx = context.Background()
 
 // TenantData represents tenant metadata
 type TenantData struct {
-	TenantID   string `json:"tenant_id"`
-	Name       string `json:"name"`
-	CreatedAt  int64  `json:"created_at"`
+	TenantID  string `json:"tenant_id"`
+	Name      string `json:"name"`
+	CreatedAt int64  `json:"created_at"`
 }
 
 // IdempotencyData represents the stored data
@@ -45,6 +45,7 @@ func main() {
 	r.POST("/idempotencies", setIdempotencyKey)
 	r.GET("/idempotencies/:key", getIdempotencyKey)
 	r.DELETE("/idempotencies/:key", deleteIdempotencyKey)
+	r.GET("/health-check", healthCheck) // Added health-check route
 
 	log.Println("Idempotency service running on :8080")
 	r.Run(":8080")
@@ -180,4 +181,9 @@ func deleteIdempotencyKey(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Idempotency key deleted"})
+}
+
+// Health-check endpoint
+func healthCheck(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "I'm alive"})
 }

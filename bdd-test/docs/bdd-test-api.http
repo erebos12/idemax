@@ -1,0 +1,40 @@
+### Responses from /features
+### only available, if features persisted in MongoDB
+
+### upload feature by sending JSON
+POST http://{{bdd-test-api.hostname}}/features
+Content-Type: application/json
+accept: application/json
+
+< ./crud_api_test.json
+
+### upload feature by sending JSON
+POST http://{{bdd-test-api.hostname}}/features
+Content-Type: application/json
+accept: application/json
+
+< ./health_check.json
+
+### update feature by sending JSON
+PATCH http://{{bdd-test-api.hostname}}/features/665eb2673737fcb520f340a5
+Content-Type: application/json
+accept: application/json
+
+{
+  "id": "665eb2673737fcb520f340a5",
+  "filename": "healthcheck.feature",
+  "content": "Feature: Test health-check endpoint\n\nScenario: health-check endpoint\n  When sending get to \"http://springboot:8080/health-check\"\n  Then expect response code \"200\""
+}
+
+### list all available features
+GET http://{{bdd-test-api.hostname}}/features
+accept: application/json
+
+### list single feature
+GET http://{{bdd-test-api.hostname}}/features/665eb2673737fcb520f340a5
+accept: application/json
+
+###
+## query non-existing feature
+GET http://{{bdd-test-api.hostname}}/features/665eb2673737fcb520f340a6
+accept: application/json

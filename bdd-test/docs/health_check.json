@@ -1,0 +1,4 @@
+{
+  "filename": "healtcheck",
+  "content": "Feature: Test health-check endpoint\n\nScenario: health-check endpoint\n  When sending garbage to \"http://springboot:8080/health-check\"\n  Then expect response code \"200\""
+}

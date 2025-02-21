@@ -1,0 +1,6 @@
+{
+  "keycloakURL": "http://keycloak:8080",
+  "keycloakRealm": "bluconnect",
+  "keycloakClientId": "bluconnect",
+  "bffURL": "http://localhost:12094"
+}
