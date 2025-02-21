@@ -6,7 +6,7 @@ Feature: Idempotency Key Management
     {
       "tenant_id": "12345",
       "idempotency_key": "req-789",
-      "ttl_seconds": 60,
+      "ttl_seconds": 10,
       "status": "pending",
       "http_status": 202,
       "response": "{}"
@@ -23,6 +23,21 @@ Feature: Idempotency Key Management
     And json attribute "["http_status"]" is equal to "202"
     And json attribute "["response"]" is equal to "{}"
 
+  Scenario: Create a duplicate idempotency key
+    Given following json
+    """
+    {
+      "tenant_id": "12345",
+      "idempotency_key": "req-789",
+      "ttl_seconds": 10,
+      "status": "pending",
+      "http_status": 202,
+      "response": "{}"
+    }
+    """
+    When send "POST" to "http://idemax:8080/idempotencies"
+    Then expect response code "409"
+    
   Scenario: Retrieve a non-existent idempotency key
     When send "GET" to "http://idemax:8080/idempotency/12345/non-existent-key"
     Then expect response code "404"
@@ -42,20 +57,6 @@ Feature: Idempotency Key Management
     Then expect response code "404"
 
   Scenario: Successfully delete an existing idempotency key
-    Given following json
-    """
-    {
-      "tenant_id": "12345",
-      "idempotency_key": "req-789",
-      "ttl_seconds": 60,
-      "status": "pending",
-      "http_status": 202,
-      "response": "{}"
-    }
-    """
-    When send "POST" to "http://idemax:8080/idempotencies"
-    Then expect response code "201"
-
     When send "DELETE" to "http://idemax:8080/idempotency/12345/req-789"
     Then expect response code "200"
     And json attribute "["message"]" is equal to "Idempotency key deleted"
@@ -78,4 +79,6 @@ Feature: Idempotency Key Management
     When send "DELETE" to "http://idemax:8080/idempotency/12345/"
     Then expect response code "404"
 
-    
+
+
+

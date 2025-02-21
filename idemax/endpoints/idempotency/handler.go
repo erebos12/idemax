@@ -16,14 +16,23 @@ func SetIdempotencyKey(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload", "details": err.Error()})
 		return
 	}
+	
+	//Check if the idempotency key already exists in Redis
+	if redishelper.IdempotencyKeyExists(request.IdempotencyKey) {
+		c.JSON(http.StatusConflict, gin.H{"error": "Idempotency key already exists"})
+		return
+	}
 
+	// Validate TTL
 	if request.TTLSeconds <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid TTL value, must be greater than 0"})
 		return
 	}
 
+	// Calculate expiration time
 	expiresAt := time.Now().Unix() + request.TTLSeconds
 
+	// Prepare data to be stored in Redis
 	data := IdempotencyData{
 		Status:     request.Status,
 		HTTPStatus: request.HTTPStatus,
@@ -31,6 +40,7 @@ func SetIdempotencyKey(c *gin.Context) {
 		ExpiresAt:  expiresAt,
 	}
 
+	// Store idempotency key in Redis
 	err := StoreIdempotencyKey(request.TenantID, request.IdempotencyKey, data, request.TTLSeconds)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to store idempotency key"})
