@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// SetIdempotencyKey handles storing a new idempotency key
 func SetIdempotencyKey(c *gin.Context) {
 	var request IdempotencyRequest
 
@@ -18,10 +17,13 @@ func SetIdempotencyKey(c *gin.Context) {
 		return
 	}
 
-	// Calculate expiration time
+	if request.TTLSeconds <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid TTL value, must be greater than 0"})
+		return
+	}
+
 	expiresAt := time.Now().Unix() + request.TTLSeconds
 
-	// Prepare data to be stored in Redis
 	data := IdempotencyData{
 		Status:     request.Status,
 		HTTPStatus: request.HTTPStatus,
@@ -29,7 +31,6 @@ func SetIdempotencyKey(c *gin.Context) {
 		ExpiresAt:  expiresAt,
 	}
 
-	// Store idempotency key in Redis
 	err := StoreIdempotencyKey(request.TenantID, request.IdempotencyKey, data, request.TTLSeconds)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to store idempotency key"})
@@ -38,6 +39,8 @@ func SetIdempotencyKey(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Idempotency key stored"})
 }
+
+
 
 // GetIdempotencyKey handles retrieving an existing idempotency key
 func GetIdempotencyKey(c *gin.Context) {

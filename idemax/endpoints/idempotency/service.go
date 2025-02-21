@@ -11,11 +11,9 @@ import (
 
 var ctx = context.Background()
 
-// StoreIdempotencyKey saves an idempotency key in Redis
 func StoreIdempotencyKey(tenantID, key string, data IdempotencyData, ttlSeconds int64) error {
 	redisClient := utils.GetRedisClient()
 
-	data.ExpiresAt = time.Now().Unix() + ttlSeconds
 	serializedData, _ := json.Marshal(data)
 
 	err := redisClient.Set(ctx, "idempotency:"+key, serializedData, time.Duration(ttlSeconds)*time.Second).Err()
@@ -25,6 +23,7 @@ func StoreIdempotencyKey(tenantID, key string, data IdempotencyData, ttlSeconds 
 
 	return nil
 }
+
 
 // RetrieveIdempotencyKey fetches an idempotency key from Redis
 func RetrieveIdempotencyKey(tenantID, key string) (*IdempotencyData, error) {
