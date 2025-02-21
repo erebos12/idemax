@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"encoding/json"
 	"log"
+	"os"
 	"net/http"
 	"time"
 
@@ -29,6 +30,14 @@ type IdempotencyData struct {
 	ExpiresAt  int64           `json:"expires_at"`
 }
 
+func getRedisAddr() string {
+	addr := os.Getenv("REDIS_HOST")
+	if addr == "" {
+		addr = "localhost:6379" // Default fallback
+	}
+	return addr
+}
+
 func main() {
 	// Initialize Gin router
 	r := gin.Default()
@@ -43,7 +52,7 @@ func main() {
 
 func getRedisClient(tenantID string) *redis.Client {
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379", // Change for production
+		Addr: getRedisAddr(),
 		DB:   getTenantDB(tenantID),
 	})
 	return redisClient
@@ -51,7 +60,7 @@ func getRedisClient(tenantID string) *redis.Client {
 
 func getTenantDB(tenantID string) int {
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: getRedisAddr(),
 		DB:   0,
 	})
 	dbNum, err := redisClient.Get(ctx, "tenant_db:"+tenantID).Int()
@@ -64,7 +73,7 @@ func getTenantDB(tenantID string) int {
 
 func getAllTenantIDs() []string {
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: getRedisAddr(),
 		DB:   0,
 	})
 	keys, _ := redisClient.Keys(ctx, "tenant_db:*").Result()
@@ -81,7 +90,7 @@ func createTenant(c *gin.Context) {
 	tenant.CreatedAt = time.Now().Unix()
 	dbNum := getTenantDB(tenant.TenantID)
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: getRedisAddr(),
 		DB:   dbNum,
 	})
 

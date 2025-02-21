@@ -23,6 +23,9 @@ RUN apk --no-cache add ca-certificates bash
 # Set working directory
 WORKDIR /root/
 
+ENV REDIS_HOST=redis:6379
+
+
 # Copy the built Go binary from the builder stage
 COPY --from=builder /app/idemax /root/idemax
 
