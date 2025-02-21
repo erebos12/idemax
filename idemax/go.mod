@@ -1,4 +1,4 @@
-module idempotency-service
+module idemax
 
 go 1.20
 
