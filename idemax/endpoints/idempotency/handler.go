@@ -1,7 +1,6 @@
 package idempotency
 
 import (
-	"encoding/json"
 	"net/http"
 	"time"
 	"idemax/utils/redis" 
@@ -11,14 +10,7 @@ import (
 
 // SetIdempotencyKey handles storing a new idempotency key
 func SetIdempotencyKey(c *gin.Context) {
-	var request struct {
-		TenantID       string          `json:"tenant_id" binding:"required"`
-		IdempotencyKey string          `json:"idempotency_key" binding:"required"`
-		TTLSeconds     int64           `json:"ttl_seconds" binding:"required"`
-		Status         string          `json:"status"`
-		HTTPStatus     int             `json:"http_status"`
-		Response       json.RawMessage `json:"response"`
-	}
+	var request IdempotencyRequest
 
 	// Parse JSON body
 	if err := c.ShouldBindJSON(&request); err != nil {
