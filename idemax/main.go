@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"strconv"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -116,9 +116,14 @@ func setIdempotencyKey(c *gin.Context) {
 		return
 	}
 
-	data.ExpiresAt = time.Now().Unix() + int64(c.PostForm("ttl_seconds"))
+	ttlSeconds, err := strconv.ParseInt(c.PostForm("ttl_seconds"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ttl_seconds value"})
+		return
+	}
+	data.ExpiresAt = time.Now().Unix() + ttlSeconds
 	serializedData, _ := json.Marshal(data)
-	err := redisClient.Set(ctx, "idempotency:"+key, serializedData, time.Duration(data.ExpiresAt)*time.Second).Err()
+	err = redisClient.Set(ctx, "idempotency:"+key, serializedData, time.Duration(data.ExpiresAt)*time.Second).Err()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to store idempotency key"})
 		return
@@ -167,4 +172,3 @@ func deleteIdempotencyKey(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Idempotency key deleted"})
 }
-

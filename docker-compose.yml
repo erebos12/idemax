@@ -10,11 +10,11 @@ services:
     volumes:
       - redis_data:/data
 
-  idempotency-service:
+  idemax:
     build:
-      context: ./idemax  # Ensure Dockerfile location is correct
+      context: ./idemax
       dockerfile: Dockerfile
-    container_name: idempotency-service
+    container_name: idemax
     restart: always
     ports:
       - "8080:8080"

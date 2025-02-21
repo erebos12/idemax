@@ -1,33 +1,36 @@
-# Use official Golang image as the build stage
+# Use the official Golang image as a builder
 FROM golang:1.20 as builder
 
-# Set working directory inside the container
+# Set the working directory
 WORKDIR /app
 
-# Copy go module files and download dependencies
-COPY go.mod ./
-RUN go mod tidy  # Ensures go.sum is generated
+# Copy go modules files and download dependencies
+COPY go.mod go.sum ./
+RUN go mod download
 
-# Copy the rest of the source code
+# Copy the source code
 COPY . .
 
-# Build the Go binary
-RUN go build -o idempotency-service main.go
+# Build the Go application
+RUN go build -o idemax main.go
 
-# Use a minimal image for production
+# Use a minimal base image for deployment
 FROM alpine:latest
 
-# Install necessary certificates
+# Install ca-certificates
 RUN apk --no-cache add ca-certificates
 
 # Set working directory
 WORKDIR /root/
 
-# Copy the built binary from the builder stage
-COPY --from=builder /app/idempotency-service .
+# Copy the built binary
+COPY --from=builder /app/idemax .
 
 # Expose application port
 EXPOSE 8080
 
-# Start the application
-CMD ["./idempotency-service"]
+# Ensure correct permissions
+RUN chmod +x idemax
+
+# Run the application
+CMD ["./idemax"]
