@@ -43,7 +43,7 @@ func main() {
 	r.POST("/tenants", createTenant)
 	r.POST("/idempotencies", setIdempotencyKey)
 	r.GET("/idempotency/:tenant_id/:idempotency_key", getIdempotencyKey)
-	r.DELETE("/idempotencies/:key", deleteIdempotencyKey)
+	r.DELETE("/idempotency/:tenant_id/:idempotency_key", deleteIdempotencyKey)
 	r.GET("/health-check", healthCheck) // Added health-check route
 
 	log.Println("Idempotency service running on :8080")
@@ -165,8 +165,25 @@ func getIdempotencyKey(c *gin.Context) {
 		return
 	}
 
+	// Initialize Redis client (DB 0) to check if tenant exists
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: getRedisAddr(),
+		DB:   0,
+	})
+
+	// Check if tenant ID exists in Redis
+	exists, err := redisClient.Exists(ctx, "tenant:"+tenantID).Result()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error checking tenant existence"})
+		return
+	}
+	if exists == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Tenant not found"})
+		return
+	}
+
 	// Initialize Redis client for the given tenant
-	redisClient := getRedisClient(tenantID)
+	redisClient = getRedisClient(tenantID)
 
 	// Fetch idempotency data from Redis
 	data, err := redisClient.Get(ctx, "idempotency:"+key).Result()
@@ -185,23 +202,58 @@ func getIdempotencyKey(c *gin.Context) {
 }
 
 
+
 func deleteIdempotencyKey(c *gin.Context) {
-	tenantID := c.GetHeader("X-Tenant-ID")
+	// Retrieve parameters from URL
+	tenantID := c.Param("tenant_id")
+	key := c.Param("idempotency_key")
+
+	// Validate parameters
 	if tenantID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing tenant ID"})
 		return
 	}
+	if key == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing idempotency key"})
+		return
+	}
 
-	redisClient := getRedisClient(tenantID)
-	key := c.Param("key")
-	err := redisClient.Del(ctx, "idempotency:"+key).Err()
+	// Initialize Redis client (DB 0) to check if tenant exists
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: getRedisAddr(),
+		DB:   0,
+	})
+
+	// Check if tenant ID exists in Redis
+	exists, err := redisClient.Exists(ctx, "tenant:"+tenantID).Result()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error checking tenant existence"})
+		return
+	}
+	if exists == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Tenant not found"})
+		return
+	}
+
+	// Initialize Redis client for the given tenant
+	redisClient = getRedisClient(tenantID)
+
+	// Delete idempotency key from Redis
+	delCount, err := redisClient.Del(ctx, "idempotency:"+key).Result()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete idempotency key"})
 		return
 	}
 
+	// If key didn't exist, return 404
+	if delCount == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Idempotency key not found"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "Idempotency key deleted"})
 }
+
 
 // Health-check endpoint
 func healthCheck(c *gin.Context) {
