@@ -2,14 +2,17 @@
 
 # Idemax – For Maximal Idempotency! 🚀
 
-Idemax is a lightweight CRUD service for managing idempotency keys, backed by Redis.  
-It ensures that API requests are processed only once, preventing duplicate operations in distributed systems.  
+**IdeMax** (Idempotency Key Service) manages idempotency keys in **Redis** to detect and prevent duplicate API requests.  
 
-## Features  
-- **Idempotency key storage** with expiration support  
-- **Multi-tenant support** with dynamic Redis database assignment  
-- **REST API** with CRUD operations  
-- **Health-check endpoint** for easy monitoring  
+## **Functionality**  
+- **Create** an idempotency key with status and expiration time.  
+- **Retrieve** a stored key with status, HTTP status, and response data.  
+- **Delete** a key to free up storage.  
+- **Error handling** for missing or non-existent keys and tenants.  
+
+## **Use Case**  
+The service ensures that repeated API requests (e.g., due to network failures or duplicate user actions) are not processed multiple times. Ideal for **payments, order processing, or external API integrations**. 🚀
+
 
 ---
 
