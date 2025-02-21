@@ -15,3 +15,23 @@ Feature: Idempotency Key Management
     When send "POST" to "http://idemax:8080/idempotencies"
     Then expect response code "201"
     And json attribute "["message"]" is equal to "Idempotency key stored"
+
+  Scenario: Retrieve an existing idempotency key
+    When send "GET" to "http://idemax:8080/idempotency/12345/req-789"
+    Then expect response code "200"
+    And json attribute "["status"]" is equal to "pending"
+    And json attribute "["http_status"]" is equal to "202"
+    And json attribute "["response"]" is equal to "{}"
+
+  Scenario: Retrieve a non-existent idempotency key
+    When send "GET" to "http://idemax:8080/idempotency/12345/non-existent-key"
+    Then expect response code "404"
+    And json attribute "["error"]" is equal to "Idempotency key not found"
+
+  Scenario: Missing tenant ID in request
+    When send "GET" to "http://idemax:8080/idempotency/req-789"
+    Then expect response code "404"
+
+  Scenario: Missing idempotency key in request
+    When send "GET" to "http://idemax:8080/idempotency/12345/"
+    Then expect response code "404"

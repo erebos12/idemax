@@ -42,7 +42,7 @@ func main() {
 	r := gin.Default()
 	r.POST("/tenants", createTenant)
 	r.POST("/idempotencies", setIdempotencyKey)
-	r.GET("/idempotencies/:key", getIdempotencyKey)
+	r.GET("/idempotency/:tenant_id/:idempotency_key", getIdempotencyKey)
 	r.DELETE("/idempotencies/:key", deleteIdempotencyKey)
 	r.GET("/health-check", healthCheck) // Added health-check route
 
@@ -151,14 +151,24 @@ func setIdempotencyKey(c *gin.Context) {
 
 
 func getIdempotencyKey(c *gin.Context) {
-	tenantID := c.GetHeader("X-Tenant-ID")
+	// Retrieve parameters from URL
+	tenantID := c.Param("tenant_id")
+	key := c.Param("idempotency_key")
+
+	// Validate parameters
 	if tenantID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing tenant ID"})
 		return
 	}
+	if key == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing idempotency key"})
+		return
+	}
 
+	// Initialize Redis client for the given tenant
 	redisClient := getRedisClient(tenantID)
-	key := c.Param("key")
+
+	// Fetch idempotency data from Redis
 	data, err := redisClient.Get(ctx, "idempotency:"+key).Result()
 	if err == redis.Nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Idempotency key not found"})
@@ -168,10 +178,12 @@ func getIdempotencyKey(c *gin.Context) {
 		return
 	}
 
+	// Parse and return the retrieved data
 	var idempotencyData IdempotencyData
 	json.Unmarshal([]byte(data), &idempotencyData)
 	c.JSON(http.StatusOK, idempotencyData)
 }
+
 
 func deleteIdempotencyKey(c *gin.Context) {
 	tenantID := c.GetHeader("X-Tenant-ID")
