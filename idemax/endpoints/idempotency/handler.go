@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
-	"idemax/utils"
+	"idemax/utils/redis" 
 
 	"github.com/gin-gonic/gin"
 )
@@ -53,7 +53,7 @@ func GetIdempotencyKey(c *gin.Context) {
 	key := c.Param("idempotency_key")
 
 	// Check if tenant ID exists in Redis
-	if !TenantExists(tenantID) {
+	if !redishelper.TenantExists(tenantID) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Tenant not found"})
 		return
 	}
@@ -74,13 +74,13 @@ func DeleteIdempotencyKey(c *gin.Context) {
 	key := c.Param("idempotency_key")
 
 	// Check if the tenant ID exists in Redis
-	if !TenantExists(tenantID) {
+	if !redishelper.TenantExists(tenantID) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Tenant not found"})
 		return
 	}
 
 	// Check if the idempotency key exists in Redis
-	if !IdempotencyKeyExists(tenantID, key) {
+	if !redishelper.IdempotencyKeyExists(key) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Idempotency key not found"})
 		return
 	}
@@ -95,26 +95,4 @@ func DeleteIdempotencyKey(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Idempotency key deleted"})
 }
 
-
-func TenantExists(tenantID string) bool {
-	redisClient := utils.GetRedisClient()
-
-	// Check if the tenant key exists in Redis
-	exists, err := redisClient.Exists(ctx, "tenant:"+tenantID).Result()
-	if err != nil || exists == 0 {
-		return false
-	}
-	return true
-}
-
-func IdempotencyKeyExists(tenantID, key string) bool {
-	redisClient := utils.GetRedisClient()
-
-	// Check if the idempotency key exists in Redis
-	exists, err := redisClient.Exists(ctx, "idempotency:"+key).Result()
-	if err != nil || exists == 0 {
-		return false
-	}
-	return true
-}
 
