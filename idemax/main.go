@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -107,40 +106,49 @@ func createTenant(c *gin.Context) {
 }
 
 func setIdempotencyKey(c *gin.Context) {
-	var data IdempotencyData
-	if err := c.ShouldBindJSON(&data); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+	var request struct {
+		TenantID       string          `json:"tenant_id" binding:"required"`
+		IdempotencyKey string          `json:"idempotency_key" binding:"required"`
+		TTLSeconds     int64           `json:"ttl_seconds" binding:"required"`
+		Status         string          `json:"status"`
+		HTTPStatus     int             `json:"http_status"`
+		Response       json.RawMessage `json:"response"`
+	}
+
+	// Parse JSON body
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload", "details": err.Error()})
 		return
 	}
 
-	tenantID := c.GetHeader("X-Tenant-ID")
-	if tenantID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing tenant ID"})
-		return
+	// Initialize Redis client for the given tenant
+	redisClient := getRedisClient(request.TenantID)
+
+	// Calculate expiration time
+	expiresAt := time.Now().Unix() + request.TTLSeconds
+
+	// Prepare data to be stored in Redis
+	data := IdempotencyData{
+		Status:     request.Status,
+		HTTPStatus: request.HTTPStatus,
+		Response:   request.Response,
+		ExpiresAt:  expiresAt,
 	}
 
-	redisClient := getRedisClient(tenantID)
-	key := c.PostForm("idempotency_key")
-	if key == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing idempotency_key"})
-		return
-	}
-
-	ttlSeconds, err := strconv.ParseInt(c.PostForm("ttl_seconds"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ttl_seconds value"})
-		return
-	}
-	data.ExpiresAt = time.Now().Unix() + ttlSeconds
+	// Serialize the data
 	serializedData, _ := json.Marshal(data)
-	err = redisClient.Set(ctx, "idempotency:"+key, serializedData, time.Duration(data.ExpiresAt)*time.Second).Err()
+
+	// Store in Redis with TTL
+	err := redisClient.Set(ctx, "idempotency:"+request.IdempotencyKey, serializedData, time.Duration(request.TTLSeconds)*time.Second).Err()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to store idempotency key"})
 		return
 	}
 
+	// Success response
 	c.JSON(http.StatusCreated, gin.H{"message": "Idempotency key stored"})
 }
+
 
 func getIdempotencyKey(c *gin.Context) {
 	tenantID := c.GetHeader("X-Tenant-ID")
