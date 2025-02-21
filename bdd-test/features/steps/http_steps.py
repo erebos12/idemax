@@ -314,3 +314,17 @@ def send_generic_http_request(context, http_method, url):
         context.json = response.json()
     except ValueError:  # no json available
         pass
+
+
+@given('header "{header_name}" is "{header_value}"')
+def set_request_header(context, header_name, header_value):
+    if not hasattr(context, "headers"):
+        context.headers = {}
+    context.headers[header_name] = header_value
+
+
+@given('form-data "{field}" is "{value}"')
+def set_form_data(context, field, value):
+    if not hasattr(context, "form_data"):
+        context.form_data = {}
+    context.form_data[field] = value
