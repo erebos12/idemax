@@ -14,8 +14,8 @@ func SetupRouter(r *gin.Engine) {
 
 	// Idempotency Endpoints
 	r.POST("/idempotencies", idempotency.SetIdempotencyKey)
-	r.GET("/idempotency/:tenant_id/:idempotency_key", idempotency.GetIdempotencyKey)
-	r.DELETE("/idempotency/:tenant_id/:idempotency_key", idempotency.DeleteIdempotencyKey)
+	r.GET("/idempotencies/:tenant_id/:idempotency_key", idempotency.GetIdempotencyKey)
+	r.DELETE("/idempotencies/:tenant_id/:idempotency_key", idempotency.DeleteIdempotencyKey)
 
 	// Health Check
 	r.GET("/health-check", health.HealthCheck)
