@@ -328,3 +328,11 @@ def set_form_data(context, field, value):
     if not hasattr(context, "form_data"):
         context.form_data = {}
     context.form_data[field] = value
+
+@when('wait for "{msecs}" msecs')
+def wait_for_msecs(context, msecs):
+    try:
+        milliseconds = int(msecs)
+        time.sleep(milliseconds / 1000.0)  # Convert to seconds
+    except ValueError:
+        raise ValueError(f"Invalid milliseconds value: {msecs}")
