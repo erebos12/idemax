@@ -2,9 +2,6 @@ from kafka import KafkaProducer
 import json
 from hamcrest import *
 
-TOPIC_NAME = "test-topic"
-KAFKA_BROKER = "kafka:29092"  # Internal Docker network
-
 
 def json_serializer(data):
     return json.dumps(data).encode('utf-8')
@@ -20,5 +17,3 @@ def sending_json_to_kafka(context, broker, topic):
     producer.send(topic, context.json)
     producer.flush()
     producer.close()
-
-
