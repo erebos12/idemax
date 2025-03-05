@@ -16,7 +16,7 @@ func CreateTenant(c *gin.Context) {
 	}
 
 	tenant.CreatedAt = time.Now().Unix()
-	if err := SaveTenant(tenant); err != nil { // ✅ Call SaveTenant directly
+	if err := SaveTenant(tenant); err != nil { 
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create tenant"})
 		return
 	}

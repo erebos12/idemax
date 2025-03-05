@@ -2,7 +2,6 @@ import time
 from io import *
 
 import yaml
-import yaml
 from hamcrest import *
 
 from utils import *

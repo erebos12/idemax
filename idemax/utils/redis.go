@@ -16,7 +16,7 @@ var (
 	once        sync.Once
 )
 
-// Initializee Redis-connection only once
+// Initialize Redis-connection only once
 func InitRedis() {
 	once.Do(func() {
 		addr := os.Getenv("REDIS_HOST")

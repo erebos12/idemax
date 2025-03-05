@@ -1,13 +1,15 @@
 package idempotency
 
 import (
+	redishelper "idemax/utils/redis"
 	"net/http"
 	"time"
-	"idemax/utils/redis" 
 
 	"github.com/gin-gonic/gin"
 )
 
+// SetIdempotencyKey stores an idempotency key in Redis after validating the request.
+// Returns conflict if the key exists or bad request for invalid TTL.
 func SetIdempotencyKey(c *gin.Context) {
 	var request IdempotencyRequest
 
@@ -16,7 +18,7 @@ func SetIdempotencyKey(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload", "details": err.Error()})
 		return
 	}
-	
+
 	//Check if the idempotency key already exists in Redis
 	if redishelper.IdempotencyKeyExists(request.IdempotencyKey) {
 		c.JSON(http.StatusConflict, gin.H{"error": "Idempotency key already exists"})
@@ -50,8 +52,6 @@ func SetIdempotencyKey(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Idempotency key stored"})
 }
 
-
-
 // GetIdempotencyKey handles retrieving an existing idempotency key
 func GetIdempotencyKey(c *gin.Context) {
 	tenantID := c.Param("tenant_id")
@@ -72,7 +72,6 @@ func GetIdempotencyKey(c *gin.Context) {
 
 	c.JSON(http.StatusOK, idempotencyData)
 }
-
 
 func DeleteIdempotencyKey(c *gin.Context) {
 	tenantID := c.Param("tenant_id")
@@ -99,5 +98,3 @@ func DeleteIdempotencyKey(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Idempotency key deleted"})
 }
-
-

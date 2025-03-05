@@ -2,10 +2,17 @@ services:
   bdd-test:
     build:
       context: ./bdd-test
-      dockerfile: Dockerfile  
+      dockerfile: Dockerfile
     volumes:
       - ./reports:/tests/output
     depends_on:
       - redis
       - idemax
-    command: /bin/sh -c "exec /tests/execute_tests.sh"
+      - kafka
+    command: > 
+        /bin/sh -c "dockerize \
+        -wait http://idemax:8080/health-check -timeout 30s
+        -wait tcp://redis:6379 -timeout 30s \
+        -wait tcp://kafka:9092 -timeout 30s \
+        && exec /tests/execute_tests.sh"
+
