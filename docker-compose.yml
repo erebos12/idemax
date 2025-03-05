@@ -50,17 +50,6 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
 
-  bdd-test:
-    container_name: bdd_test
-    build:
-      context: ./bdd-test/
-      dockerfile: Dockerfile
-    depends_on:
-      - idemax
-      - redis
-      - zookeeper
-      - kafka
-
 volumes:
   redis_data:
     driver: local

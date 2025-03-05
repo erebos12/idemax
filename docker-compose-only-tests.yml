@@ -6,8 +6,9 @@ services:
     volumes:
       - ./reports:/tests/output
     depends_on:
-      - redis
       - idemax
+      - redis
+      - zookeeper
       - kafka
     command: > 
         /bin/sh -c "dockerize \
