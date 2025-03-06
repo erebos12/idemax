@@ -26,15 +26,12 @@ RUN pip install --upgrade pip
 RUN pip install py-bdd-test==1.0.13
 
 # Debugging: List package contents
-RUN ls -rtl /app/venv/lib/python3.11/site-packages/py_bdd_test/features/steps
+RUN ls -rtl /app/venv/lib/python3.11/site-packages/py_bdd_test/features/steps/*.py
 
 # Copy feature files
-COPY features/ /app/features/
+COPY features /app/venv/lib/python3.11/site-packages/py_bdd_test/features
 COPY behave.ini /app/behave.ini
-COPY execute_tests.sh /app/execute_tests.sh
 
-# Ensure the test execution script has the correct permissions
-RUN chmod +x /app/execute_tests.sh
+# Set the entrypoint to directly execute behave
+ENTRYPOINT ["behave"]
 
-# Set the entrypoint to run the tests
-ENTRYPOINT ["/app/execute_tests.sh"]
