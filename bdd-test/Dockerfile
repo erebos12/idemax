@@ -23,7 +23,7 @@ ENV PATH="/app/venv/bin:$PATH"
 RUN pip install --upgrade pip
 
 # Install py-bdd-test from PyPI inside the virtual environment
-RUN pip install py-bdd-test==1.0.13
+RUN pip install --no-cache-dir py-bdd-test==1.0.14
 
 # Debugging: List package contents
 RUN ls -rtl /app/venv/lib/python3.11/site-packages/py_bdd_test/features/steps/*.py
@@ -32,6 +32,6 @@ RUN ls -rtl /app/venv/lib/python3.11/site-packages/py_bdd_test/features/steps/*.
 COPY features /app/venv/lib/python3.11/site-packages/py_bdd_test/features
 COPY behave.ini /app/behave.ini
 
-# Set the entrypoint to directly execute behave
-ENTRYPOINT ["behave"]
+# This script should be executed from outside the container to run the tests
+COPY execute_tests.sh /app/execute_tests.sh
 

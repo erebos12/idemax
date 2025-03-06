@@ -18,7 +18,7 @@ execute_tests() {
   cd /app
 
   # Run Behave using the step definitions from py-bdd-test
-  behave --format=pretty --outfile /app/output/report.txt
+  behave
 
   if [ $? -ne 0 ]; then
     print_error && return 1

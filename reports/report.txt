@@ -1,0 +1,146 @@
+Feature: Test health-check endpoint # venv/lib/python3.11/site-packages/py_bdd_test/features/healthcheck.feature:1
+
+  Scenario: health-check endpoint                         # venv/lib/python3.11/site-packages/py_bdd_test/features/healthcheck.feature:3
+    When sending get to "http://idemax:8080/health-check" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:127
+    Then expect response code "200"                       # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+
+Feature: Idempotency Key Management # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key.feature:1
+
+  Scenario: Create a new idempotencies key                                # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key.feature:3
+    Given following json                                                  # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:109
+      """
+      {
+        "tenant_id": "12345",
+        "idempotency_key": "req-789",
+        "ttl_seconds": 10,
+        "status": "pending",
+        "http_status": 202,
+        "response": "{}"
+      }
+      """
+    When send "POST" to "http://idemax:8080/idempotencies"                # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "201"                                       # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+    And json attribute "["message"]" is equal to "Idempotency key stored" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:154
+
+  Scenario: Retrieve an existing idempotency key                        # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key.feature:19
+    When send "GET" to "http://idemax:8080/idempotencies/12345/req-789" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "200"                                     # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+    And json attribute "["status"]" is equal to "pending"               # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:154
+    And json attribute "["http_status"]" is equal to "202"              # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:154
+    And json attribute "["response"]" is equal to "{}"                  # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:154
+
+  Scenario: Create a duplicate idempotency key             # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key.feature:26
+    Given following json                                   # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:109
+      """
+      {
+        "tenant_id": "12345",
+        "idempotency_key": "req-789",
+        "ttl_seconds": 10,
+        "status": "pending",
+        "http_status": 202,
+        "response": "{}"
+      }
+      """
+    When send "POST" to "http://idemax:8080/idempotencies" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "409"                        # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+
+  Scenario: Retrieve a non-existent idempotency key                              # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key.feature:41
+    When send "GET" to "http://idemax:8080/idempotencies/12345/non-existent-key" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "404"                                              # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+    And json attribute "["error"]" is equal to "Idempotency key not found"       # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:154
+
+  Scenario: Retrieve an idempotency key for a non-existent tenant       # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key.feature:46
+    When send "GET" to "http://idemax:8080/idempotencies/99999/req-789" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "404"                                     # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+    And json attribute "["error"]" is equal to "Tenant not found"       # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:154
+
+  Scenario: Missing tenant ID in request                          # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key.feature:51
+    When send "GET" to "http://idemax:8080/idempotencies/req-789" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "404"                               # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+
+  Scenario: Missing idempotency key in request                   # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key.feature:55
+    When send "GET" to "http://idemax:8080/idempotencies/12345/" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "404"                              # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+
+  Scenario: Successfully delete an existing idempotency key                # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key.feature:59
+    When send "DELETE" to "http://idemax:8080/idempotencies/12345/req-789" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "200"                                        # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+    And json attribute "["message"]" is equal to "Idempotency key deleted" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:154
+
+  Scenario: Delete a non-existent idempotency key                                   # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key.feature:64
+    When send "DELETE" to "http://idemax:8080/idempotencies/12345/non-existent-key" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "404"                                                 # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+    And json attribute "["error"]" is equal to "Idempotency key not found"          # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:154
+
+  Scenario: Delete an idempotency key for a non-existent tenant            # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key.feature:69
+    When send "DELETE" to "http://idemax:8080/idempotencies/99999/req-789" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "404"                                        # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+    And json attribute "["error"]" is equal to "Tenant not found"          # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:154
+
+  Scenario: Missing tenant ID in request                             # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key.feature:74
+    When send "DELETE" to "http://idemax:8080/idempotencies/req-789" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "404"                                  # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+
+  Scenario: Missing idempotency key in request                      # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key.feature:78
+    When send "DELETE" to "http://idemax:8080/idempotencies/12345/" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "404"                                 # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+
+Feature: Idempotency Key TTL feature - idempotency key gone after ttl # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key_ttl.feature:1
+
+  Scenario: Create a new idempotencies key                                # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key_ttl.feature:3
+    Given following json                                                  # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:109
+      """
+      {
+        "tenant_id": "12345",
+        "idempotency_key": "req-789",
+        "ttl_seconds": 1,
+        "status": "pending",
+        "http_status": 202,
+        "response": "{}"
+      }
+      """
+    When send "POST" to "http://idemax:8080/idempotencies"                # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "201"                                       # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+    And json attribute "["message"]" is equal to "Idempotency key stored" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:154
+
+  Scenario: Retrieve an existing idempotency key                        # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key_ttl.feature:19
+    When send "GET" to "http://idemax:8080/idempotencies/12345/req-789" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "200"                                     # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+    And json attribute "["status"]" is equal to "pending"               # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:154
+    And json attribute "["http_status"]" is equal to "202"              # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:154
+    And json attribute "["response"]" is equal to "{}"                  # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:154
+
+  Scenario: Wait until ttl expires and check if idempotency key is gone    # venv/lib/python3.11/site-packages/py_bdd_test/features/idempotency_key_ttl.feature:26
+    When wait for "1500" msecs                                             # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:331
+    When send "GET" to "http://idemax:8080/idempotencies/12345/req-789"    # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "404"                                        # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+    And json attribute "["error"]" is equal to "Idempotency key not found" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:154
+
+Feature: Sending JSON to Kafka # venv/lib/python3.11/site-packages/py_bdd_test/features/kafka.feature:1
+
+  Scenario: Send a JSON message to a Kafka topic                             # venv/lib/python3.11/site-packages/py_bdd_test/features/kafka.feature:3
+    Given following json                                                     # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:109
+      """
+      {
+        "index": 1,
+        "message": "Hello Kafka"
+      }
+      """
+    When kafka - sending json to broker "kafka:29092" and topic "test-topic" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/kafka_steps.py:10
+
+Feature: Login tests # venv/lib/python3.11/site-packages/py_bdd_test/features/login_ui_test.feature:1
+
+Feature: Tenant Management # venv/lib/python3.11/site-packages/py_bdd_test/features/tenant_creation.feature:1
+
+  Scenario: Create a new tenant                                                # venv/lib/python3.11/site-packages/py_bdd_test/features/tenant_creation.feature:3
+    Given following json                                                       # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:109
+      """
+      {
+        "tenant_id": "12345",
+        "name": "TestTenant"
+      }
+      """
+    When send "POST" to "http://idemax:8080/tenants"                           # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:303
+    Then expect response code "201"                                            # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/http_steps.py:184
+    And json attribute "["message"]" is equal to "Tenant created successfully" # venv/lib/python3.11/site-packages/py_bdd_test/features/steps/json_steps.py:154
+
