@@ -23,7 +23,7 @@ ENV PATH="/app/venv/bin:$PATH"
 RUN pip install --upgrade pip
 
 # Install py-bdd-test from PyPI inside the virtual environment
-RUN pip install py-bdd-test==1.0.28
+RUN pip install py-bdd-test==1.0.29
 
 # Debugging: List package contents
 RUN ls -rtl /app/venv/lib/python3.11/site-packages/py_bdd_test/features/steps/*.py
