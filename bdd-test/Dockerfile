@@ -8,7 +8,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     && python -m venv /app/venv \
     && /app/venv/bin/pip install --upgrade pip \
-    && /app/venv/bin/pip install colorama py-bdd-test==1.0.29 \
+    && /app/venv/bin/pip install colorama py-bdd-test==1.0.30 \
     && rm -rf /var/lib/apt/lists/*  # Clean up to reduce image size
 
 # Set the environment path for the virtual environment
