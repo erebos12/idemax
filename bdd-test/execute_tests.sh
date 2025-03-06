@@ -1,18 +1,25 @@
 #!/usr/bin/env bash
+set -e  # Exit immediately if any command fails
 
 ##### emoji section #####
 checkmark=$'\xE2\x9C\x85'
 weary_cat_face=$'\xF0\x9F\x99\x80'
 police_red_light=$'\xF0\x9F\x9A\xA8'
 beer=$'\xF0\x9F\x8D\xBA'
-############
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NOCOLOR='\033[0m'
 
 execute_tests() {
-  fullFeaturePath=./features/
-  behave /tests/features
+  echo "🚀 Running Behave tests..."
+
+  # Ensure we are in the correct directory where behave.ini is located
+  cd /app
+
+  # Run Behave using the step definitions from py-bdd-test
+  behave --format=pretty --outfile /app/output/report.txt
+
   if [ $? -ne 0 ]; then
     print_error && return 1
   else

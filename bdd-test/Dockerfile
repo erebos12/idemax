@@ -4,24 +4,37 @@ FROM python:3.11-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Install required system dependencies (optional)
-RUN apt-get update && apt-get install -y curl unzip wget
+# Install required system dependencies
+RUN apt-get update && apt-get install -y wget
 
+# Install Dockerize (useful for waiting on services)
 ENV DOCKERIZE_VERSION v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
+# Create a virtual environment inside /app/venv
+RUN python -m venv /app/venv
 
-# Copy only the feature files into the container
+# Ensure Python and Pip use the virtual environment (NO NEED TO SOURCE)
+ENV PATH="/app/venv/bin:$PATH"
+
+# Upgrade pip inside the virtual environment
+RUN pip install --upgrade pip
+
+# Install py-bdd-test from PyPI inside the virtual environment
+RUN pip install py-bdd-test==1.0.13
+
+# Debugging: List package contents
+RUN ls -rtl /app/venv/lib/python3.11/site-packages/py_bdd_test/features/steps
+
+# Copy feature files
 COPY features/ /app/features/
+COPY behave.ini /app/behave.ini
 COPY execute_tests.sh /app/execute_tests.sh
 
-# Install pip and virtual environment tools
-RUN python -m pip install --upgrade pip
+# Ensure the test execution script has the correct permissions
+RUN chmod +x /app/execute_tests.sh
 
-# Install py-bdd-test from PyPI
-RUN pip install py-bdd-test
-
-# Set the default command to run behave tests
-CMD ["behave", "--format=pretty"]
+# Set the entrypoint to run the tests
+ENTRYPOINT ["/app/execute_tests.sh"]
