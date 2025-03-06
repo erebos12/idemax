@@ -7,12 +7,6 @@ WORKDIR /app
 # Install required system dependencies
 RUN apt-get update && apt-get install -y wget
 
-# Install Dockerize (useful for waiting on services)
-ENV DOCKERIZE_VERSION v0.6.1
-RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
-
 # Create a virtual environment inside /app/venv
 RUN python -m venv /app/venv
 
@@ -23,7 +17,7 @@ ENV PATH="/app/venv/bin:$PATH"
 RUN pip install --upgrade pip
 
 # Install py-bdd-test from PyPI inside the virtual environment
-RUN pip install py-bdd-test==1.0.29
+RUN pip install colorama py-bdd-test==1.0.29
 
 # Debugging: List package contents
 RUN ls -rtl /app/venv/lib/python3.11/site-packages/py_bdd_test/features/steps/*.py
@@ -31,6 +25,7 @@ RUN ls -rtl /app/venv/lib/python3.11/site-packages/py_bdd_test/features/steps/*.
 # Copy feature files
 COPY features /app/venv/lib/python3.11/site-packages/py_bdd_test/features
 COPY behave.ini /app/behave.ini
+COPY wait_for_service.py /app/wait_for_service.py
 
 # This script should be executed from outside the container to run the tests
 COPY execute_tests.sh /app/execute_tests.sh

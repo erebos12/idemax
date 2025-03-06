@@ -10,7 +10,7 @@ services:
       - kafka
     command: >
       /bin/sh -c "
-      dockerize -wait http://idemax:8080/health-check -timeout 30s \
-      -wait tcp://redis:6379 -timeout 30s \
-      -wait tcp://kafka:9092 -timeout 30s \
+      python3 /app/wait_for_service.py http://idemax:8080/health-check 30 \
+      && python3 /app/wait_for_service.py tcp://redis:6379 30 \
+      && python3 /app/wait_for_service.py tcp://kafka:9092 30 \
       && exec /app/execute_tests.sh"
