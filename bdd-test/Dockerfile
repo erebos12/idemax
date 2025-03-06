@@ -1,32 +1,22 @@
-# Use the official Python image
+# Use the official Python slim image
 FROM python:3.11-slim
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /app
 
-# Install required system dependencies
-RUN apt-get update && apt-get install -y wget
+# Install system dependencies & create a virtual environment
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    && python -m venv /app/venv \
+    && /app/venv/bin/pip install --upgrade pip \
+    && /app/venv/bin/pip install colorama py-bdd-test==1.0.29 \
+    && rm -rf /var/lib/apt/lists/*  # Clean up to reduce image size
 
-# Create a virtual environment inside /app/venv
-RUN python -m venv /app/venv
-
-# Ensure Python and Pip use the virtual environment (NO NEED TO SOURCE)
+# Set the environment path for the virtual environment
 ENV PATH="/app/venv/bin:$PATH"
 
-# Upgrade pip inside the virtual environment
-RUN pip install --upgrade pip
-
-# Install py-bdd-test from PyPI inside the virtual environment
-RUN pip install colorama py-bdd-test==1.0.29
-
-# Debugging: List package contents
-RUN ls -rtl /app/venv/lib/python3.11/site-packages/py_bdd_test/features/steps/*.py
-
-# Copy feature files
+# Copy required application files
 COPY features /app/venv/lib/python3.11/site-packages/py_bdd_test/features
-COPY behave.ini /app/behave.ini
-COPY wait_for_service.py /app/wait_for_service.py
+COPY behave.ini wait_for_service.py execute_tests.sh /app/
 
-# This script should be executed from outside the container to run the tests
-COPY execute_tests.sh /app/execute_tests.sh
-
+# Ensure the test execution script is executable
+RUN chmod +x /app/execute_tests.sh
