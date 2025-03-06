@@ -66,7 +66,7 @@ def wait_for_service(service_url, timeout):
         host, port = parsed_url.netloc.split(":")
         wait_for_tcp(host, port, timeout)
     else:
-        print_message(f"⚠️ Invalid service URL format: {service_url}", Fore.YELLOW, "⚠️")
+        print_message(f"Invalid service URL format: {service_url}", Fore.RED, "⚠️")
         sys.exit(1)
 
 
