@@ -4,13 +4,8 @@ services:
       context: ./bdd-test
       dockerfile: Dockerfile
     depends_on:
-      - idemax
-      - redis
-      - zookeeper
-      - kafka
-    command: >
-      /bin/sh -c "
-      python3 /app/wait_for_service.py http://idemax:8080/health-check 30 \
-      && python3 /app/wait_for_service.py tcp://redis:6379 30 \
-      && python3 /app/wait_for_service.py tcp://kafka:9092 30 \
-      && exec /app/execute_tests.sh"
+      redis:
+        condition: service_healthy
+      idemax:
+        condition: service_healthy
+    command: ["/bin/sh", "-c", "exec /app/execute_tests.sh"]

@@ -16,7 +16,7 @@ ENV PATH="/app/venv/bin:$PATH"
 
 # Copy required application files
 COPY features /app/venv/lib/python3.11/site-packages/py_bdd_test/features
-COPY behave.ini wait_for_service.py execute_tests.sh /app/
+COPY behave.ini execute_tests.sh /app/
 
 # Ensure the test execution script is executable
 RUN chmod +x /app/execute_tests.sh
