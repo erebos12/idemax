@@ -2,7 +2,7 @@
 
 # Idemax – For Maximal Idempotency! 🚀
 
-**IdeMax** (Idempotency Key Service) manages idempotency keys in **Redis** to detect and prevent duplicate API requests.  
+**IdeMax** (Idempotency Key Service) is a blueprint for managing idempotency keys in **Redis** to detect and prevent duplicate API requests.  
 
 ## **Functionality**  
 - **Create** an idempotency key with status and expiration time.  
